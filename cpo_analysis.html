@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPO Co-Packaged Optics Analysis | 共封装光学分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --text: #333;
+            --text-light: #666;
+            --bg: #f8f9fa;
+            --card-bg: #fff;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Language Toggle */
+        .lang-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .lang-toggle:hover {
+            background: var(--highlight);
+            transform: translateY(-2px);
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 80px 20px 60px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        header .date {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--highlight);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Section */
+        section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: var(--primary);
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--highlight);
+            display: inline-block;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--highlight);
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--highlight);
+            margin-bottom: 10px;
+        }
+
+        .stat-card .label {
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        /* Charts */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        th, td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        /* Tags */
+        .tag {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .tag-high {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .tag-medium {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .tag-low {
+            background: #fce4ec;
+            color: #c62828;
+        }
+
+        .tag-buy {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .tag-hold {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+        }
+
+        footer p {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            nav ul {
+                gap: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-wrapper {
+                height: 300px;
+            }
+        }
+
+        /* Language classes */
+        .zh { display: block; }
+        .en { display: none; }
+
+        .lang-en .zh { display: none; }
+        .lang-en .en { display: block; }
+        .lang-en .lang-toggle { content: "中文"; }
+    </style>
+</head>
+<body>
+    <button class="lang-toggle" onclick="toggleLanguage()">EN/中文</button>
+
+    <header>
+        <h1>
+            <span class="zh">CPO 共封装光学分析报告</span>
+            <span class="en">CPO Co-Packaged Optics Analysis Report</span>
+        </h1>
+        <p class="subtitle">
+            <span class="zh">行业研究与投资分析 | 2026年5月</span>
+            <span class="en">Industry Research & Investment Analysis | May 2026</span>
+        </p>
+        <p class="date">
+            <span class="zh">数据截止：2026年Q2 | 最后更新：2026年5月25日</span>
+            <span class="en">Data as of: Q2 2026 | Last Updated: May 25, 2026</span>
+        </p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#overview">
+                <span class="zh">行业概述</span>
+                <span class="en">Overview</span>
+            </a></li>
+            <li><a href="#market">
+                <span class="zh">市场分析</span>
+                <span class="en">Market</span>
+            </a></li>
+            <li><a href="#companies">
+                <span class="zh">公司分析</span>
+                <span class="en">Companies</span>
+            </a></li>
+            <li><a href="#investment">
+                <span class="zh">投资分析</span>
+                <span class="en">Investment</span>
+            </a></li>
+            <li><a href="#risk">
+                <span class="zh">风险提示</span>
+                <span class="en">Risks</span>
+            </a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <!-- Overview Section -->
+        <section id="overview">
+            <h2 class="section-title">
+                <span class="zh">行业概述</span>
+                <span class="en">Industry Overview</span>
+            </h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="value">$4.5B</div>
+                    <div class="label">
+                        <span class="zh">2025年市场规模（实际数据）</span>
+                        <span class="en">2025 Market Size (Actual)</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">$38B</div>
+                    <div class="label">
+                        <span class="zh">2030年市场规模（预测）</span>
+                        <span class="en">2030 Market Size (Forecast)</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">52%</div>
+                    <div class="label">
+                        <span class="zh">2025-2030年CAGR</span>
+                        <span class="en">2025-2030 CAGR</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">150%</div>
+                    <div class="label">
+                        <span class="zh">2025年同比增长</span>
+                        <span class="en">2025 YoY Growth</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <span class="zh">什么是CPO？</span>
+                    <span class="en">What is CPO?</span>
+                </h3>
+                <p>
+                    <span class="zh">共封装光学（Co-Packaged Optics，CPO）是一种将光学引擎直接集成到交换芯片封装内的技术。相比传统可插拔光模块，CPO可降低30-50%功耗，显著提高带宽密度，是下一代数据中心光互联的关键方向。</span>
+                    <span class="en">Co-Packaged Optics (CPO) is a technology that integrates optical engines directly into switch chip packages. Compared to traditional pluggable optical modules, CPO can reduce power consumption by 30-50% and significantly increase bandwidth density, making it a key direction for next-generation data center optical interconnects.</span>
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <span class="zh">核心优势</span>
+                    <span class="en">Key Advantages</span>
+                </h3>
+                <ul style="padding-left: 20px;">
+                    <li><span class="zh">功耗降低30-50%</span><span class="en">Power consumption reduced by 30-50%</span></li>
+                    <li><span class="zh">带宽密度显著提高</span><span class="en">Significantly increased bandwidth density</span></li>
+                    <li><span class="zh">延迟降低</span><span class="en">Reduced latency</span></li>
+                    <li><span class="zh">信号完整性改善</span><span class="en">Improved signal integrity</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Market Section -->
+        <section id="market">
+            <h2 class="section-title">
+                <span class="zh">市场分析</span>
+                <span class="en">Market Analysis</span>
+            </h2>
+
+            <div class="chart-container">
+                <h3 style="margin-bottom: 20px;">
+                    <span class="zh">市场规模预测（2024-2032年）</span>
+                    <span class="en">Market Size Forecast (2024-2032)</span>
+                </h3>
+                <div class="chart-wrapper">
+                    <canvas id="marketChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 style="margin-bottom: 20px;">
+                    <span class="zh">区域市场分布（2026年）</span>
+                    <span class="en">Regional Market Distribution (2026)</span>
+                </h3>
+                <div class="chart-wrapper" style="height: 300px;">
+                    <canvas id="regionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <span class="zh">增长驱动力</span>
+                    <span class="en">Growth Drivers</span>
+                </h3>
+                <ul style="padding-left: 20px;">
+                    <li><span class="zh">AI计算需求爆发 - GPT-5、Gemini 2.0等大模型训练需求激增</span><span class="en">AI Computing Demand - Surging demand from GPT-5, Gemini 2.0 and other large model training</span></li>
+                    <li><span class="zh">数据中心带宽升级 - 1.6T成为主流，3.2T产品开始导入</span><span class="en">Data Center Bandwidth Upgrade - 1.6T becoming mainstream, 3.2T products being introduced</span></li>
+                    <li><span class="zh">能效要求提高 - PUE要求更严格，CPO能效优势凸显</span><span class="en">Energy Efficiency Requirements - Stricter PUE requirements, CPO energy advantages highlighted</span></li>
+                    <li><span class="zh">超大规模厂商推动 - 全面部署CPO交换机</span><span class="en">Hyperscaler Push - Comprehensive deployment of CPO switches</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Companies Section -->
+        <section id="companies">
+            <h2 class="section-title">
+                <span class="zh">公司分析</span>
+                <span class="en">Company Analysis</span>
+            </h2>
+
+            <h3 style="margin-bottom: 20px; color: var(--primary);">
+                <span class="zh">A股CPO概念股（2025年实际数据）</span>
+                <span class="en">A-Share CPO Concept Stocks (2025 Actual Data)</span>
+            </h3>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><span class="zh">公司</span><span class="en">Company</span></th>
+                            <th><span class="zh">代码</span><span class="en">Code</span></th>
+                            <th><span class="zh">营收(亿元)</span><span class="en">Revenue(Bn RMB)</span></th>
+                            <th><span class="zh">净利润(亿元)</span><span class="en">Net Profit(Bn RMB)</span></th>
+                            <th><span class="zh">毛利率</span><span class="en">Gross Margin</span></th>
+                            <th><span class="zh">营收增速</span><span class="en">Revenue Growth</span></th>
+                            <th><span class="zh">评级</span><span class="en">Rating</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>中际旭创</strong></td>
+                            <td>300308.SZ</td>
+                            <td>350+</td>
+                            <td>70+</td>
+                            <td>32%+</td>
+                            <td>75%+</td>
+                            <td><span class="tag tag-buy">买入/Buy</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>新易盛</strong></td>
+                            <td>300502.SZ</td>
+                            <td>150+</td>
+                            <td>30+</td>
+                            <td>30%+</td>
+                            <td>90%+</td>
+                            <td><span class="tag tag-buy">买入/Buy</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>天孚通信</strong></td>
+                            <td>300394.SZ</td>
+                            <td>50+</td>
+                            <td>15+</td>
+                            <td>45%+</td>
+                            <td>70%+</td>
+                            <td><span class="tag tag-buy">买入/Buy</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>光迅科技</strong></td>
+                            <td>002281.SZ</td>
+                            <td>100+</td>
+                            <td>10+</td>
+                            <td>28%+</td>
+                            <td>40%+</td>
+                            <td><span class="tag tag-hold">增持/Hold</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>源杰科技</strong></td>
+                            <td>688498.SH</td>
+                            <td>20+</td>
+                            <td>6+</td>
+                            <td>38%+</td>
+                            <td>60%+</td>
+                            <td><span class="tag tag-buy">买入/Buy</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>华工科技</strong></td>
+                            <td>000988.SZ</td>
+                            <td>60+</td>
+                            <td>6+</td>
+                            <td>25%+</td>
+                            <td>30%+</td>
+                            <td><span class="tag tag-hold">增持/Hold</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>长飞光纤</strong></td>
+                            <td>601869.SH</td>
+                            <td>120+</td>
+                            <td>12+</td>
+                            <td>22%+</td>
+                            <td>25%+</td>
+                            <td><span class="tag tag-hold">增持/Hold</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card" style="margin-top: 30px;">
+                <h3>
+                    <span class="zh">产业链受益确定性排序</span>
+                    <span class="en">Industry Chain Benefit Certainty Ranking</span>
+                </h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><span class="zh">排名</span><span class="en">Rank</span></th>
+                                <th><span class="zh">产业链环节</span><span class="en">Segment</span></th>
+                                <th><span class="zh">受益确定性</span><span class="en">Certainty</span></th>
+                                <th><span class="zh">代表公司</span><span class="en">Key Companies</span></th>
+                                <th><span class="zh">2026年状态</span><span class="en">2026 Status</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td><span class="zh">上游核心器件</span><span class="en">Upstream Core Components</span></td>
+                                <td><span class="tag tag-high">最高/Highest</span></td>
+                                <td><span class="zh">源杰科技、Coherent Corp</span><span class="en">Yuanjie Tech, Coherent Corp</span></td>
+                                <td><span class="zh">已兑现高增长</span><span class="en">High Growth Delivered</span></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td><span class="zh">光无源器件</span><span class="en">Passive Optical Components</span></td>
+                                <td><span class="tag tag-high">最高/Highest</span></td>
+                                <td><span class="zh">天孚通信</span><span class="en">T&S Communications</span></td>
+                                <td><span class="zh">已兑现高增长</span><span class="en">High Growth Delivered</span></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td><span class="zh">光模块/光引擎</span><span class="en">Optical Modules/Engines</span></td>
+                                <td><span class="tag tag-high">高/High</span></td>
+                                <td><span class="zh">中际旭创、新易盛</span><span class="en">Innolight, Eoptolink</span></td>
+                                <td><span class="zh">高增长持续</span><span class="en">High Growth Continues</span></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td><span class="zh">交换芯片</span><span class="en">Switch Chips</span></td>
+                                <td><span class="tag tag-high">高/High</span></td>
+                                <td><span class="zh">Broadcom、NVIDIA</span><span class="en">Broadcom, NVIDIA</span></td>
+                                <td><span class="zh">主导地位稳固</span><span class="en">Dominant Position Stable</span></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td><span class="zh">封装测试</span><span class="en">Packaging & Testing</span></td>
+                                <td><span class="tag tag-medium">中高/Medium-High</span></td>
+                                <td><span class="zh">ASE、长电科技</span><span class="en">ASE, JCET</span></td>
+                                <td><span class="zh">受益增长</span><span class="en">Benefiting from Growth</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Investment Section -->
+        <section id="investment">
+            <h2 class="section-title">
+                <span class="zh">投资分析</span>
+                <span class="en">Investment Analysis</span>
+            </h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="value" style="font-size: 1.8rem;">
+                        <span class="zh">中际旭创</span>
+                        <span class="en">Innolight</span>
+                    </div>
+                    <div class="label">
+                        <span class="zh">全球光模块龙头</span>
+                        <span class="en">Global Optical Module Leader</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <span class="tag tag-buy">买入/Buy</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" style="font-size: 1.8rem;">
+                        <span class="zh">新易盛</span>
+                        <span class="en">Eoptolink</span>
+                    </div>
+                    <div class="label">
+                        <span class="zh">成长性最强</span>
+                        <span class="en">Strongest Growth</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <span class="tag tag-buy">买入/Buy</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" style="font-size: 1.8rem;">
+                        <span class="zh">天孚通信</span>
+                        <span class="en">T&S Comm</span>
+                    </div>
+                    <div class="label">
+                        <span class="zh">无源器件龙头</span>
+                        <span class="en">Passive Component Leader</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <span class="tag tag-buy">买入/Buy</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" style="font-size: 1.8rem;">
+                        <span class="zh">源杰科技</span>
+                        <span class="en">Yuanjie Tech</span>
+                    </div>
+                    <div class="label">
+                        <span class="zh">激光器芯片领先</span>
+                        <span class="en">Laser Chip Leader</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <span class="tag tag-buy">买入/Buy</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <span class="zh">投资建议</span>
+                    <span class="en">Investment Recommendations</span>
+                </h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><span class="zh">投资者类型</span><span class="en">Investor Type</span></th>
+                                <th><span class="zh">建议</span><span class="en">Recommendation</span></th>
+                                <th><span class="zh">推荐标的</span><span class="en">Recommended Stocks</span></th>
+                                <th><span class="zh">关注催化剂</span><span class="en">Key Catalysts</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="zh">激进型</span><span class="en">Aggressive</span></td>
+                                <td><span class="zh">重点关注CPO产业链核心环节</span><span class="en">Focus on CPO industry chain core</span></td>
+                                <td><span class="zh">中际旭创、新易盛、源杰科技</span><span class="en">Innolight, Eoptolink, Yuanjie</span></td>
+                                <td><span class="zh">3.2T产品量产</span><span class="en">3.2T Product Mass Production</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="zh">稳健型</span><span class="en">Moderate</span></td>
+                                <td><span class="zh">配置光模块龙头和无源器件龙头</span><span class="en">Allocate to optical module and passive component leaders</span></td>
+                                <td><span class="zh">中际旭创、天孚通信</span><span class="en">Innolight, T&S Comm</span></td>
+                                <td><span class="zh">行业持续增长</span><span class="en">Sustained Industry Growth</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="zh">保守型</span><span class="en">Conservative</span></td>
+                                <td><span class="zh">关注行业整体趋势，分散投资</span><span class="en">Focus on industry trends, diversify</span></td>
+                                <td><span class="zh">光模块ETF</span><span class="en">Optical Module ETF</span></td>
+                                <td><span class="zh">行业趋势</span><span class="en">Industry Trends</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Risk Section -->
+        <section id="risk">
+            <h2 class="section-title">
+                <span class="zh">风险提示</span>
+                <span class="en">Risk Factors</span>
+            </h2>
+
+            <div class="stats-grid">
+                <div class="card">
+                    <h3>
+                        <span class="zh">技术风险</span>
+                        <span class="en">Technology Risks</span>
+                    </h3>
+                    <ul style="padding-left: 20px;">
+                        <li><span class="zh">3.2T产品开发进度不及预期</span><span class="en">3.2T product development delays</span></li>
+                        <li><span class="zh">良率风险</span><span class="en">Yield rate risks</span></li>
+                        <li><span class="zh">成本下降不及预期</span><span class="en">Cost reduction below expectations</span></li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>
+                        <span class="zh">市场风险</span>
+                        <span class="en">Market Risks</span>
+                    </h3>
+                    <ul style="padding-left: 20px;">
+                        <li><span class="zh">AI算力投资阶段性波动</span><span class="en">AI computing investment fluctuations</span></li>
+                        <li><span class="zh">行业竞争加剧</span><span class="en">Intensified industry competition</span></li>
+                        <li><span class="zh">宏观经济下行影响</span><span class="en">Macroeconomic downturn impact</span></li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>
+                        <span class="zh">政策风险</span>
+                        <span class="en">Policy Risks</span>
+                    </h3>
+                    <ul style="padding-left: 20px;">
+                        <li><span class="zh">地缘政治风险</span><span class="en">Geopolitical risks</span></li>
+                        <li><span class="zh">出口管制政策变化</span><span class="en">Export control policy changes</span></li>
+                        <li><span class="zh">产业政策调整</span><span class="en">Industrial policy adjustments</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card" style="background: #fff3e0; border-left: 4px solid #ff9800;">
+                <h3 style="color: #e65100;">
+                    <span class="zh">免责声明</span>
+                    <span class="en">Disclaimer</span>
+                </h3>
+                <p style="color: #bf360c;">
+                    <span class="zh">本报告仅供研究参考，不构成投资建议。投资有风险，入市需谨慎。数据基于截至2026年5月的公开信息整理，市场数据可能已发生变化。</span>
+                    <span class="en">This report is for research reference only and does not constitute investment advice. Investing involves risks, please invest with caution. Data is based on public information as of May 2026 and may have changed.</span>
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <span class="zh">CPO共封装光学分析报告 | 数据截止：2026年Q2</span>
+            <span class="en">CPO Co-Packaged Optics Analysis Report | Data as of: Q2 2026</span>
+        </p>
+        <p style="margin-top: 10px;">
+            <span class="zh">数据来源：公开信息整理 | 免责声明：本报告仅供研究参考</span>
+            <span class="en">Data Source: Public Information | Disclaimer: For research reference only</span>
+        </p>
+    </footer>
+
+    <script>
+        // Language Toggle
+        function toggleLanguage() {
+            document.body.classList.toggle('lang-en');
+            const btn = document.querySelector('.lang-toggle');
+            if (document.body.classList.contains('lang-en')) {
+                btn.textContent = '中文';
+            } else {
+                btn.textContent = 'EN/中文';
+            }
+        }
+
+        // Market Size Chart
+        const marketCtx = document.getElementById('marketChart').getContext('2d');
+        new Chart(marketCtx, {
+            type: 'bar',
+            data: {
+                labels: ['2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032'],
+                datasets: [{
+                    label: 'Market Size ($B)',
+                    data: [1.8, 4.5, 8.5, 14.0, 21.0, 29.0, 38.0, 47.0, 55.0],
+                    backgroundColor: [
+                        '#0f3460',
+                        '#e94560',
+                        '#0f3460',
+                        '#0f3460',
+                        '#0f3460',
+                        '#0f3460',
+                        '#0f3460',
+                        '#0f3460',
+                        '#0f3460'
+                    ],
+                    borderColor: '#1a1a2e',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Billion USD'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Regional Distribution Chart
+        const regionCtx = document.getElementById('regionChart').getContext('2d');
+        new Chart(regionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['North America / 北美', 'Asia Pacific / 亚太', 'Europe / 欧洲', 'Others / 其他'],
+                datasets: [{
+                    data: [50, 35, 12, 3],
+                    backgroundColor: [
+                        '#e94560',
+                        '#0f3460',
+                        '#16213e',
+                        '#1a1a2e'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
